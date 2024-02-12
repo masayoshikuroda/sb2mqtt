@@ -1,3 +1,4 @@
+import os
 import sys
 import logging
 import asyncio
@@ -13,7 +14,9 @@ targets = []
 targets.append(PlugSwitchBotDevice())
 targets.append(MeterSwitchBotDevice())
 
-register = MQTTRegister('mqtt.local', 1883)
+HOST = os.environ.get('MQTT_HOST', 'mqtt.local')
+PORT = int(os.environ.get('MQTT_PORT', '1883'))
+register = MQTTRegister(HOST, PORT)
 
 def detection_callback(device, advertisement_data):
     logger.debug(f"Detected device: address={device.address}, name={device.name}, rssi={device.rssi}")
@@ -25,7 +28,8 @@ def detection_callback(device, advertisement_data):
                 register.regist(device.address, device. name, device.rssi, info)
             break
 
-scanner = BleScanner(60)
+SCAN_TIME = int(os.environ.get('SCAN_TIME', '60'))
+scanner = BleScanner(SCAN_TIME)
 
 while True:
     loop = asyncio.get_event_loop()
