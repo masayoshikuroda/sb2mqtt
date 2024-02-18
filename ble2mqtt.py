@@ -4,7 +4,7 @@ import logging
 import asyncio
 from mqtt_register import MQTTRegister
 from ble_scanner import BleScanner
-from switchbot_device import PlugSwitchBotDevice, MeterSwitchBotDevice
+from switchbot_device import PlugSwitchBotDevice, MeterSwitchBotDevice, BotSwitchBotDevice
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -13,6 +13,7 @@ logger.setLevel(logging.INFO)
 targets = []
 targets.append(PlugSwitchBotDevice)
 targets.append(MeterSwitchBotDevice)
+targets.append(SwitchBotDevice)
 
 HOST = os.environ.get('MQTT_HOST', 'localhost')
 PORT = int(os.environ.get('MQTT_PORT', '1883'))
