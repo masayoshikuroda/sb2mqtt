@@ -11,27 +11,31 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.INFO)
 
 targets = []
-targets.append(PlugSwitchBotDevice())
-targets.append(MeterSwitchBotDevice())
+targets.append(PlugSwitchBotDevice)
+targets.append(MeterSwitchBotDevice)
 
-HOST = os.environ.get('MQTT_HOST', 'mqtt.local')
+HOST = os.environ.get('MQTT_HOST', 'localhost')
 PORT = int(os.environ.get('MQTT_PORT', '1883'))
 register = MQTTRegister(HOST, PORT)
 
 def detection_callback(device, advertisement_data):
-    logger.debug(f"Detected device: address={device.address}, name={device.name}, rssi={device.rssi}")
+    logger.debug(f"Detected device: address={device.address}, name={device.name}, rssi={advertisement_data.rssi}")
     
     for target in targets:
-        if target.match(device, advertisement_data):
-            info = target.parse(advertisement_data.manufacturer_data)
-            if any(info):
-                register.regist(device.address, device. name, device.rssi, info)
+        info = target.parse(device, advertisement_data)
+        if any(info):
+            register.regist(device.address, device.name, advertisement_data.rssi, info)
             break
 
-SCAN_TIME = int(os.environ.get('SCAN_TIME', '60'))
-scanner = BleScanner(SCAN_TIME)
+SCAN_TIME = int(os.environ.get('SCAN_TIME', '10'))
+async def main():
+    scanner = BleScanner(SCAN_TIME)
+    while True:
+        map = await scanner.scan()
+        for key in map:
+            entry = map[key]
+            detection_callback(entry[0], entry[1])
 
-while True:
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(scanner.start(detection_callback))
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
 
