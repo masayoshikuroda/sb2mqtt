@@ -16,6 +16,8 @@ targets.append(MeterSwitchBotDevice)
 
 HOST = os.environ.get('MQTT_HOST', 'localhost')
 PORT = int(os.environ.get('MQTT_PORT', '1883'))
+print(HOST)
+print(PORT)
 register = MQTTRegister(HOST, PORT)
 
 def detection_callback(device, advertisement_data):
