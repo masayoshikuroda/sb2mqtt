@@ -13,7 +13,6 @@ logger.setLevel(logging.INFO)
 targets = []
 targets.append(PlugSwitchBotDevice)
 targets.append(MeterSwitchBotDevice)
-targets.append(SwitchBotDevice)
 
 HOST = os.environ.get('MQTT_HOST', 'localhost')
 PORT = int(os.environ.get('MQTT_PORT', '1883'))
