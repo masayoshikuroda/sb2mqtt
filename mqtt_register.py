@@ -54,9 +54,10 @@ class MQTTRegister:
         for key in delete_keys:
             info.pop(key)
 
-        info['last_update'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-        info['device_name'] = name
+        info['address'] = address
+        info['name'] = name
         info['rssi'] = rssi
+        info['update'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
         
         topic = f"{TOPIC}/{address}/info"
         data = json.dumps(info, ensure_ascii=False)
