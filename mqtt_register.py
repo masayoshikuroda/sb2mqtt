@@ -41,6 +41,8 @@ class MQTTRegister:
     def __init__(self, host, port):
         self.host = host
         self.port = port
+        logger.info(f"MQTT host={host}, port={port}")
+
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_connect = on_connect
         self.client.on_disconnect = on_disconnect
@@ -51,6 +53,7 @@ class MQTTRegister:
         for key in info.keys():
             if type(info[key]) is bytes:
                 delete_keys.append(key)
+                logger.debug(f"Deleted key={key}, value={info[key]}")
         for key in delete_keys:
             info.pop(key)
 

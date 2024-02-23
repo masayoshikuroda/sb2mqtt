@@ -54,7 +54,7 @@ class SwitchBotDevice:
         device_id = data[0:6].hex().upper()
 
         logger.debug(f"Found SwitchBot device: device_id={device_id}, type={hex(device_type)}({device_name})")
-        return {'service_data':service_data, 'device_type':device_type, 'device_id':device_id, 'data':data}
+        return {'manufacture':'SwitchBot','service_data':service_data, 'device_type':device_type, 'device_id':device_id, 'data':data}
         
 class BotSwitchBotDevice:
     def parse(device, advertisement_data):
@@ -64,6 +64,8 @@ class BotSwitchBotDevice:
         if not info['device_type'] == 0x48:
             return {}
     
+        info['model'] = 'WoBot'
+
         data = info['service_data']
         byte1 = data[1]
         info['mode']  = 'one state mode' if byte1 & 0x80 > 0 else 'on/off state mode'
@@ -89,6 +91,8 @@ class MeterSwitchBotDevice:
         if not info['device_type'] == 0x54:
             return {}
         
+        info['model'] = 'WoMeterTH'
+
         data = info['data']
         service_data = info['service_data']
         byte0 = service_data[0]
@@ -119,6 +123,8 @@ class PlugSwitchBotDevice:
         if not info['device_type'] == 0x67 and not info['device_type'] == 0x6A:
             return {}
         
+        info['model'] = 'WoPlug'
+
         data = info['data']
         info['seq'] = data[6]
         info['status'] = 'on' if int.from_bytes(data[7:8], byteorder='little')==0x80 else 'off'
