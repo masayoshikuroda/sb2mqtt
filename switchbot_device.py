@@ -91,7 +91,7 @@ class MeterSwitchBotDevice:
         if not info['device_type'] == 0x54:
             return {}
         
-        info['model'] = 'WoMeterTH'
+        info['model'] = 'WoSensorTH'
 
         data = info['data']
         service_data = info['service_data']
@@ -112,7 +112,7 @@ class MeterSwitchBotDevice:
         byte5 = service_data[5]
         info['humidity'] = (byte5 & 0x7f)
 
-        logger.info(f"Found SwitchBot Meter device: device_id={info['device_id']}, temperature={info['temperature']}, humidity={info['humidity']}")
+        logger.info(f"Found SwitchBot Sensor device: device_id={info['device_id']}, temperature={info['temperature']}, humidity={info['humidity']}")
         return info
     
 class PlugSwitchBotDevice:
@@ -138,9 +138,25 @@ class PlugSwitchBotDevice:
         logger.info(f"Found SwitchBot Plug device: device_id={info['device_id']}, status={info['status']}, power={info['power']}")
         return info
 
+class MotionSwitchBotDevice:
+    def parse(device, advertisement_data):
+        info = SwitchBotDevice.parse(device, advertisement_data)
+        if not any(info):
+            return {}
+        if not info['device_type'] == 0x64:
+            return {}
+        
+        info['model'] = 'WoContact'
+
+        service_data = info['service_data']
+        byte2 = service_data[2]
+        info['battery'] = byte2 & 0x7f 
+
+        logger.info(f"Found SwitchBot Motion device: device_id={info['device_id']}, battery={info['battery']}")
+        return info     
 
 def detection_callback(device, advertisement_data):
-    info = PlugSwitchBotDevice.parse(device, advertisement_data)
+    info = MotionSwitchBotDevice.parse(device, advertisement_data)
     if any(info):
         logger.info(info)
 
