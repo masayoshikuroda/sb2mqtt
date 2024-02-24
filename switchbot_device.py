@@ -64,7 +64,7 @@ class BotSwitchBotDevice:
         if not info['device_type'] == 0x48:
             return {}
     
-        info['model'] = 'WoBot'
+        info['model'] = 'WoHand'
 
         data = info['service_data']
         byte1 = data[1]
@@ -88,29 +88,23 @@ class MeterSwitchBotDevice:
         info = SwitchBotDevice.parse(device, advertisement_data)
         if not any(info):
             return {}
-        if not info['device_type'] == 0x54:
+        if info['device_type'] == 0x54:
+            info['model'] = 'WoSensorTH'
+        elif info['device_type'] == 0x77:
+            info['model'] = 'WoIOSensorTH'
+        else:
             return {}
         
-        info['model'] = 'WoSensorTH'
-
-        data = info['data']
-        service_data = info['service_data']
-        byte0 = service_data[0]
-
-        byte1 = service_data[1]
-        info['group_d'] = True if byte1 & 0x08 > 0 else False
-        info['group_c'] = True if byte1 & 0x04 > 0 else False
-        info['group_b'] = True if byte1 & 0x02 > 0 else False
-        info['group_a'] = True if byte1 & 0x01 > 0 else False       
-        byte2 = service_data[2]
-        info['battery'] = byte2 & 0x7f
-        byte3 = service_data[3]
-        info['temperature_alart_status'] = byte3 & 0xc0
-        info['humidity_alert_status'] = byte3 & 0x30
-        byte4 = service_data[4]
-        info['temperature'] = (byte4 & 0x7f) + (byte3 & 0x0f)/10
-        byte5 = service_data[5]
-        info['humidity'] = (byte5 & 0x7f)
+        bytes = info['data'][5:]
+        info['group_d'] = True if bytes[1] & 0x08 > 0 else False
+        info['group_c'] = True if bytes[1] & 0x04 > 0 else False
+        info['group_b'] = True if bytes[1] & 0x02 > 0 else False
+        info['group_a'] = True if bytes[1] & 0x01 > 0 else False       
+        info['battery'] = bytes[2] & 0x7f
+        info['temperature_alart_status'] = bytes[3] & 0xc0
+        info['humidity_alert_status'] = bytes[3] & 0x30
+        info['temperature'] = (bytes[4] & 0x7f) + (bytes[3] & 0x0f)/10
+        info['humidity'] = (bytes[5] & 0x7f)
 
         logger.info(f"Found SwitchBot Sensor device: device_id={info['device_id']}, temperature={info['temperature']}, humidity={info['humidity']}")
         return info
@@ -125,15 +119,15 @@ class PlugSwitchBotDevice:
         
         info['model'] = 'WoPlug'
 
-        data = info['data']
-        info['seq'] = data[6]
-        info['status'] = 'on' if int.from_bytes(data[7:8], byteorder='little')==0x80 else 'off'
-        info['delay'] = True if data[8] & 0x01 > 0 else False
-        info['timer'] = True if data[8] & 0x02 > 0 else False
-        info['sync_utc']= True if data[8] & 0x04 > 0 else False
-        info['rssi'] = data[9]
-        info['overload'] = True if data[10] & 0xE0 > 0 else False
-        info['power'] = (int.from_bytes(data[10:12], byteorder='big') & 0x7FFF)/ 10
+        bytes = b"\x09\x69" + info['data']
+        info['seq'] = bytes[8]
+        info['status'] = 'on' if int.from_bytes(bytes[9:10], byteorder='little')==0x80 else 'off'
+        info['delay'] = True if bytes[10] & 0x01 > 0 else False
+        info['timer'] = True if bytes[10] & 0x02 > 0 else False
+        info['sync_utc']= True if bytes[10] & 0x04 > 0 else False
+        info['rssi'] = bytes[11]
+        info['overload'] = True if bytes[12] & 0xE0 > 0 else False
+        info['power'] = (int.from_bytes(bytes[12:14], byteorder='big') & 0x7FFF)/ 10
 
         logger.info(f"Found SwitchBot Plug device: device_id={info['device_id']}, status={info['status']}, power={info['power']}")
         return info
@@ -148,20 +142,19 @@ class MotionSwitchBotDevice:
         
         info['model'] = 'WoContact'
 
-        service_data = info['service_data']
-        byte2 = service_data[2]
-        info['battery'] = byte2 & 0x7f 
+        bytes = info['service_data']
+        info['battery'] = bytes[2] & 0x7f 
 
         logger.info(f"Found SwitchBot Motion device: device_id={info['device_id']}, battery={info['battery']}")
         return info     
 
 def detection_callback(device, advertisement_data):
-    info = MotionSwitchBotDevice.parse(device, advertisement_data)
+    info = MeterSwitchBotDevice.parse(device, advertisement_data)
     if any(info):
         logger.info(info)
 
 async def main():
-    await BleScanner(10).start(detection_callback)
+    await BleScanner(60).start(detection_callback)
 
 if __name__ == '__main__':
     logger.setLevel(logging.INFO)
