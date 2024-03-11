@@ -9,15 +9,13 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.INFO)
 
-TOPIC = 'ble2mqtt'
-
-def on_connect(client, userdata, flags, reason_code, properties):
-    logger.info(f"Connected with result code {reason_code}")
-
 FIRST_RECONNECT_DELAY = 1
 RECONNECT_RATE = 2
 MAX_RECONNECT_COUNT = 12
 MAX_RECONNECT_DELAY = 60
+
+def on_connect(client, userdata, flags, reason_code, properties):
+    logger.info(f"Connected with result code {reason_code}")
 
 def on_disconnect(client, userdata, rc):
     logger.info("Disconnected with result code: %s", rc)
@@ -37,18 +35,20 @@ def on_disconnect(client, userdata, rc):
         reconnect_delay = min(reconnect_delay, MAX_RECONNECT_DELAY)
         reconnect_count += 1
     logger.info("Reconnect failed after %s attempts. Exiting...", reconnect_count)
-class MQTTRegister:
-    def __init__(self, host, port):
+
+class MQTTPublisher:
+    def __init__(self, host, port, topic):
         self.host = host
         self.port = port
-        logger.info(f"MQTT host={host}, port={port}")
+        self.topic = topic
+        logger.info(f"MQTT host={host}, port={port} topic={topic}")
 
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_connect = on_connect
         self.client.on_disconnect = on_disconnect
         self.client.connect(host, port)
 
-    def regist(self, address, name, rssi, info):
+    def publish(self, address, name, rssi, info):
         delete_keys = []
         for key in info.keys():
             if type(info[key]) is bytes:
@@ -62,7 +62,7 @@ class MQTTRegister:
         info['rssi'] = rssi
         info['update'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
         
-        topic = f"{TOPIC}/{address}/info"
+        topic = f"{self.topic}/{address}/info"
         data = json.dumps(info, ensure_ascii=False)
         self.client.publish(topic, data)
         logger.info(f"Published device information. topic={topic}")
