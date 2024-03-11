@@ -12,6 +12,7 @@ logger.setLevel(logging.INFO)
 
 HOST = os.environ.get('MQTT_HOST', 'localhost')
 PORT = int(os.environ.get('MQTT_PORT', '1883'))
+TOPIC = os.environ.get('MQTT_TOPIC', 'sb2mqtt')
 SCAN_TIME = int(os.environ.get('SCAN_TIME', '10'))
 
 targets = []
@@ -20,7 +21,7 @@ targets.append(MeterSwitchBotDevice)
 targets.append(BotSwitchBotDevice)
 targets.append(MotionSwitchBotDevice)
 
-publisher = MQTTPublisher(HOST, PORT)
+publisher = MQTTPublisher(HOST, PORT, TOPIC)
 
 def detection_callback(device, advertisement_data):
     logger.debug(f"Detected device: address={device.address}, name={device.name}, rssi={advertisement_data.rssi}")
