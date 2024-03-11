@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 import asyncio
-from mqtt_register import MQTTRegister
+from mqtt_publisher import MQTTPublisher
 from ble_scanner import BleScanner
 from switchbot_device import PlugSwitchBotDevice, MeterSwitchBotDevice, BotSwitchBotDevice, MotionSwitchBotDevice
 
@@ -10,15 +10,17 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.INFO)
 
+HOST = os.environ.get('MQTT_HOST', 'localhost')
+PORT = int(os.environ.get('MQTT_PORT', '1883'))
+SCAN_TIME = int(os.environ.get('SCAN_TIME', '10'))
+
 targets = []
 targets.append(PlugSwitchBotDevice)
 targets.append(MeterSwitchBotDevice)
 targets.append(BotSwitchBotDevice)
 targets.append(MotionSwitchBotDevice)
 
-HOST = os.environ.get('MQTT_HOST', 'localhost')
-PORT = int(os.environ.get('MQTT_PORT', '1883'))
-register = MQTTRegister(HOST, PORT)
+publisher = MQTTPublisher(HOST, PORT)
 
 def detection_callback(device, advertisement_data):
     logger.debug(f"Detected device: address={device.address}, name={device.name}, rssi={advertisement_data.rssi}")
@@ -26,10 +28,9 @@ def detection_callback(device, advertisement_data):
     for target in targets:
         info = target.parse(device, advertisement_data)
         if any(info):
-            register.regist(device.address, device.name, advertisement_data.rssi, info)
+            publisher.publish(device.address, device.name, advertisement_data.rssi, info)
             break
 
-SCAN_TIME = int(os.environ.get('SCAN_TIME', '10'))
 async def main():
     scanner = BleScanner(SCAN_TIME)
     while True:
