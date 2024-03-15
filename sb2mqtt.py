@@ -4,7 +4,7 @@ import logging
 import asyncio
 from mqtt_publisher import MQTTPublisher
 from ble_scanner import BleScanner
-from switchbot_device import PlugSwitchBotDevice, MeterSwitchBotDevice, BotSwitchBotDevice, MotionSwitchBotDevice
+from switchbot_device import PlugSwitchBotDevice, MeterSwitchBotDevice, BotSwitchBotDevice, MotionSwitchBotDevice, Hub2SwitchBotDevice
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -20,6 +20,7 @@ targets.append(PlugSwitchBotDevice)
 targets.append(MeterSwitchBotDevice)
 targets.append(BotSwitchBotDevice)
 targets.append(MotionSwitchBotDevice)
+targets.append(Hub2SwitchBotDevice)
 
 publisher = MQTTPublisher(HOST, PORT, TOPIC)
 

@@ -146,10 +146,27 @@ class MotionSwitchBotDevice:
         info['battery'] = bytes[2] & 0x7f 
 
         logger.info(f"Found SwitchBot Motion device: device_id={info['device_id']}, battery={info['battery']}")
-        return info     
+        return info
 
+class Hub2SwitchBotDevice:
+    def parse(device, advertisement_data):
+        info = SwitchBotDevice.parse(device, advertisement_data)
+        if not any(info):
+            return {}
+        if not info['device_type'] == 0x76:
+            return {}
+
+        info['model'] = 'WoHub2'
+
+        bytes = info['data'][10:]
+        info['temperature'] = (bytes[4] & 0x7f) + (bytes[3] & 0x0f)/10
+        info['humidity'] = (bytes[5] & 0x7f)
+
+        logger.info(f"Found SwitchBot Hub2 device: device_id={info['device_id']}")
+        return info
+    
 def detection_callback(device, advertisement_data):
-    info = MeterSwitchBotDevice.parse(device, advertisement_data)
+    info = Hub2SwitchBotDevice.parse(device, advertisement_data)
     if any(info):
         logger.info(info)
 
