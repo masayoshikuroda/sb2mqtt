@@ -39,6 +39,6 @@ async def main():
     await BleScanner(10).start(detection_callback)
 
 if __name__ == '__main__':
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     loop = asyncio.get_event_loop()
     devices = loop.run_until_complete(main())

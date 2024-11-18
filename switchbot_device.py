@@ -20,6 +20,7 @@ device_types = {
     0x64 : 'SwitchBot Contact Sensor',
     0x75 : 'SwitchBot Color Bulb',
     0x72 : 'SwitchBot LED Strip Light',
+    0x62 : 'SwitchBot Remote',
     0x6F : 'SwitchBot Smart Lock',
     0x67 : 'SwitchBot Plug Mini',
     0x6A : 'SwitchBot Plug Mini(JP)',
@@ -37,6 +38,8 @@ device_types = {
 
     0x76 : 'SwitchBot Hub 2',
     0x77 : 'SwitchBot MeterOutdoor(WoIOSensor)/w',
+
+    0x35 : 'SwitchBot MeterPro(CO2)'
 }
 
 class SwitchBotDevice:
@@ -54,7 +57,7 @@ class SwitchBotDevice:
         device_id = data[0:6].hex().upper()
 
         logger.debug(f"Found SwitchBot device: device_id={device_id}, type={hex(device_type)}({device_name})")
-        return {'manufacture':'SwitchBot','service_data':service_data, 'device_type':device_type, 'device_id':device_id, 'data':data}
+        return {'address': device.address, 'manufacture':'SwitchBot','service_data':service_data, 'device_type':device_type, 'device_id':device_id, 'data':data}
         
 class BotSwitchBotDevice:
     def parse(device, advertisement_data):
@@ -132,7 +135,7 @@ class PlugSwitchBotDevice:
         logger.info(f"Found SwitchBot Plug device: device_id={info['device_id']}, status={info['status']}, power={info['power']}")
         return info
 
-class MotionSwitchBotDevice:
+class ContactSwitchBotDevice:
     def parse(device, advertisement_data):
         info = SwitchBotDevice.parse(device, advertisement_data)
         if not any(info):
@@ -165,8 +168,50 @@ class Hub2SwitchBotDevice:
         logger.info(f"Found SwitchBot Hub2 device: device_id={info['device_id']}")
         return info
     
+class RemoteSwitchBotDevice:
+    def parse(device, advertisement_data):
+        info = SwitchBotDevice.parse(device, advertisement_data)
+        if not any(info):
+            return {}
+        if not info['device_type'] == 0x62:
+            return {}
+
+        info['model'] = 'WoRemote'
+
+        bytes = info['data'][6:]
+
+        info['data_suffix'] = bytes
+
+        logger.info(f"Found SwitchBot Remote device: device_id={info['device_id']}")
+        return info        
+
+class MeterProCO2SwitchBotDevice:
+    def parse(device, advertisement_data):
+        info = SwitchBotDevice.parse(device, advertisement_data)
+        if not any(info):
+            return {}
+        if not info['device_type'] == 0x35:
+            return {}
+
+        info['model'] = 'WoTHPc'
+
+        bytes = info['data'][5:]
+        info['group_d'] = True if bytes[1] & 0x08 > 0 else False
+        info['group_c'] = True if bytes[1] & 0x04 > 0 else False
+        info['group_b'] = True if bytes[1] & 0x02 > 0 else False
+        info['group_a'] = True if bytes[1] & 0x01 > 0 else False
+        info['battery'] = bytes[2] & 0x7f
+        info['temperature_alart_status'] = bytes[3] & 0xc0
+        info['humidity_alert_status'] = bytes[3] & 0x30
+        info['temperature'] = (bytes[4] & 0x7f) + (bytes[3] & 0x0f)/10
+        info['humidity'] = (bytes[5] & 0x7f)
+        info['co2'] = int.from_bytes(bytes[8:10], byteorder='big') 
+
+        logger.info(f"Found SwitchBot Meter Pro(CO2) device: device_id={info['device_id']}")
+        return info
+
 def detection_callback(device, advertisement_data):
-    info = Hub2SwitchBotDevice.parse(device, advertisement_data)
+    info = SwitchBotDevice.parse(device, advertisement_data)
     if any(info):
         logger.info(info)
 
