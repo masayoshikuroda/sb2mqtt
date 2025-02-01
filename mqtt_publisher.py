@@ -42,8 +42,10 @@ class MQTTPublisher:
         self.port = port
         self.topic = topic
         logger.info(f"MQTT host={host}, port={port} topic={topic}")
-
-        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        try:
+            self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        except:
+            elf.client = mqtt.Client()
         self.client.on_connect = on_connect
         self.client.on_disconnect = on_disconnect
         self.client.connect(host, port)
