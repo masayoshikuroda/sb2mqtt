@@ -1,0 +1,15 @@
+[Unit]
+Description=SwitchBot BLE Advertisement packet to MQTT Converter 
+After=syslog.target network-online.target
+
+[Service]
+Type=simple
+User=pi
+EnvironmentFile=/etc/default/sb2mqtt
+ExecStart=python3 /home/pi/sb2mqtt/sb2mqtt.py
+Restart=always
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
