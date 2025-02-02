@@ -18,6 +18,7 @@ $ python3 sb2mqtt.py
 ### 設定ファイルの配置
 
 - sbm2qtt ファイルを/etc/default/ にコピー
+- sb2mqtt.service ファイル中の [Service]セクションのの値を修正
 - sb2mqtt.service ファイルを/etc/systemd/system/ にコピー
 
 ### 有効化
